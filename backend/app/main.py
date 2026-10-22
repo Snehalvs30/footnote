@@ -9,6 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.db import get_session
+from app.routers import documents
 
 app = FastAPI(
     title="Footnote API",
@@ -16,8 +17,10 @@ app = FastAPI(
     version="0.1.0",
 )
 
+app.include_router(documents.router)
 
-@app.get("/health")
+
+@app.get("/health", tags=["health"])
 def health(session: Session = Depends(get_session)) -> dict[str, str | None]:
     """Checks the API can reach PostgreSQL, and that pgvector is available.
 
