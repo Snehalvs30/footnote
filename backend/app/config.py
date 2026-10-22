@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     # Uploads larger than this are rejected with 413.
     max_upload_mb: int = 10
 
+    # Local embedding model: free, no API key, ~70 MB downloaded once.
+    # Produces 384 numbers per text, matching EMBEDDING_DIMENSIONS in models.py.
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
+    # A fixed folder, so the model is downloaded once (not on every restart).
+    embedding_cache_dir: str = "~/.cache/footnote/fastembed"
+
     @property
     def max_upload_bytes(self) -> int:
         return self.max_upload_mb * 1024 * 1024

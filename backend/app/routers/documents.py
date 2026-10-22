@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.chunking import chunk_pages
 from app.config import settings
 from app.db import get_session
+from app.embeddings import get_embedder
 from app.extraction import ExtractionError, extract_pages
 from app.models import Chunk, Document, DocumentStatus
 from app.schemas import ChunkOut, DocumentOut
@@ -23,7 +24,8 @@ SUPPORTED_EXTENSIONS = {".pdf": "pdf", ".txt": "text", ".md": "text"}
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 def upload_document(file: UploadFile, session: Session = Depends(get_session)) -> DocumentOut:
-    """Uploads a PDF, .txt or .md file, extracts its text and splits it into chunks.
+    """Uploads a PDF, .txt or .md file, extracts its text, splits it into chunks,
+    and computes an embedding for each chunk so it can be searched.
 
     Returns 201 even if the file couldn't be processed: the document is saved with
     status "failed" and an error message, so the user can see what went wrong.
@@ -52,10 +54,12 @@ def upload_document(file: UploadFile, session: Session = Depends(get_session)) -
         text_chunks = chunk_pages(pages)
         if not text_chunks:
             raise ExtractionError("No text found. Scanned PDFs (images of text) aren't supported yet.")
+        # One call for all chunks: the model batches them, which is much faster.
+        vectors = get_embedder().embed_passages([c.content for c in text_chunks])
         document.page_count = len(pages)
         document.chunks = [
-            Chunk(chunk_index=i, page_number=c.page_number, content=c.content)
-            for i, c in enumerate(text_chunks)
+            Chunk(chunk_index=i, page_number=c.page_number, content=c.content, embedding=vector)
+            for i, (c, vector) in enumerate(zip(text_chunks, vectors, strict=True))
         ]
         document.status = DocumentStatus.READY
     except ExtractionError as exc:
