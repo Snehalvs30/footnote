@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.embeddings import get_embedder
-from app.routers import documents, search
+from app.routers import ask, documents, search
 
 
 @asynccontextmanager
@@ -36,6 +36,7 @@ app = FastAPI(
 
 app.include_router(documents.router)
 app.include_router(search.router)
+app.include_router(ask.router)
 
 
 @app.get("/health", tags=["health"])

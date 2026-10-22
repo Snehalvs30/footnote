@@ -42,3 +42,9 @@ class SearchResult(BaseModel):
     content: str
     # 1.0 = identical meaning, 0 = unrelated. Useful for spotting weak matches.
     score: float
+
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=1000)
+    # Optional: answer only from these documents. Omit to use all of them.
+    document_ids: list[uuid.UUID] | None = None
