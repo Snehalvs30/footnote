@@ -55,5 +55,8 @@ def use_test_database(engine: Engine) -> Iterator[None]:
 
 @pytest.fixture
 def make_client() -> Callable[[], TestClient]:
-    """Each client keeps its own cookies, like a separate browser. Use one per user."""
-    return lambda: TestClient(app)
+    """Each client keeps its own cookies, like a separate browser. Use one per user.
+
+    base_url ends in /api/, so tests can write "/documents" for "/api/documents".
+    """
+    return lambda: TestClient(app, base_url="http://testserver/api/")

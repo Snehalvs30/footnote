@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     # True in production (HTTPS only). False locally, because localhost uses plain HTTP.
     cookie_secure: bool = False
 
+    # ---- Production (Day 9) ----
+    # Folder holding the built React app. When set (in the Docker image), the API
+    # also serves the frontend, so browser and API share one origin. Unset locally,
+    # where Vite serves the frontend instead.
+    static_dir: str | None = None
+
     @field_validator("jwt_secret")
     @classmethod
     def secret_is_long_enough(cls, value: SecretStr) -> SecretStr:
