@@ -1,0 +1,22 @@
+services:
+  postgres:
+    # PostgreSQL 17 with the pgvector extension pre-installed.
+    image: pgvector/pgvector:pg17
+    container_name: footnote-postgres
+    environment:
+      POSTGRES_DB: footnote
+      POSTGRES_USER: footnote
+      POSTGRES_PASSWORD: footnote   # local development only
+    ports:
+      # 5433 on your Mac, so it never clashes with Ledgerline's PostgreSQL on 5432.
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U footnote -d footnote"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

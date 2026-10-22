@@ -1,0 +1,22 @@
+[project]
+name = "footnote-backend"
+version = "0.1.0"
+description = "Footnote API: answers questions about your documents, with citations."
+readme = "README.md"
+authors = [
+    { name = "Snehal Shinde", email = "shinde.sne@northeastern.edu" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.159.1",
+    "pgvector>=0.5.1",
+    "psycopg[binary]>=3.3.6",
+    "pydantic-settings>=2.16.1",
+    "sqlalchemy>=2.1.6",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+]
