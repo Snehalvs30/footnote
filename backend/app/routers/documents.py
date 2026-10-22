@@ -10,12 +10,10 @@ from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, sta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.chunking import chunk_pages
 from app.config import settings
 from app.db import get_session
-from app.embeddings import get_embedder
-from app.extraction import ExtractionError, extract_pages
-from app.models import Chunk, Document, DocumentStatus, User
+from app.ingestion import ingest
+from app.models import Chunk, Document, User
 from app.schemas import ChunkOut, DocumentOut
 from app.security import get_current_user
 
@@ -48,32 +46,14 @@ def upload_document(
     if not data:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "The file is empty")
 
-    document = Document(
+    document = ingest(
+        session,
         owner_id=user.id,
         filename=file.filename or "untitled",
         content_type=file.content_type or "application/octet-stream",
-        status=DocumentStatus.PROCESSING,
+        data=data,
+        kind=kind,
     )
-    session.add(document)
-
-    try:
-        pages = extract_pages(data, kind)
-        text_chunks = chunk_pages(pages)
-        if not text_chunks:
-            raise ExtractionError("No text found. Scanned PDFs (images of text) aren't supported yet.")
-        # One call for all chunks: the model batches them, which is much faster.
-        vectors = get_embedder().embed_passages([c.content for c in text_chunks])
-        document.page_count = len(pages)
-        document.chunks = [
-            Chunk(chunk_index=i, page_number=c.page_number, content=c.content, embedding=vector)
-            for i, (c, vector) in enumerate(zip(text_chunks, vectors, strict=True))
-        ]
-        document.status = DocumentStatus.READY
-    except ExtractionError as exc:
-        document.status = DocumentStatus.FAILED
-        document.error = str(exc)
-
-    session.commit()
     return _to_out(document, len(document.chunks))
 
 

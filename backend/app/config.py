@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     anthropic_api_key: SecretStr | None = None
     openai_api_key: SecretStr | None = None
     max_answer_tokens: int = 1024
+    # 0 = most predictable answers: right for factual, cited answers, and repeatable evaluations.
+    llm_temperature: float = 0.0
     # How many passages to send to the LLM per question.
     answer_top_k: int = 6
     # Passages scoring below this are treated as irrelevant. If none pass, we answer
