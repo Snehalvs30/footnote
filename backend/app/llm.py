@@ -39,7 +39,7 @@ class AnthropicLLM:
         with self._client.messages.stream(
             model=self._model,
             max_tokens=self._max_tokens,
-            temperature=settings.llm_temperature,
+            # temperature=settings.llm_temperature,
             system=system,
             messages=[{"role": "user", "content": prompt}],
         ) as stream:
