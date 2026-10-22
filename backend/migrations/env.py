@@ -34,17 +34,30 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def _run(connection) -> None:
+    context.configure(connection=connection, target_metadata=target_metadata)
+    with context.begin_transaction():
+        context.run_migrations()
+
+
 def run_migrations_online() -> None:
-    """Connects to the database and applies migrations."""
+    """Connects to the database and applies migrations.
+
+    Tests pass in their own connection (to a throwaway test database) through
+    config.attributes; normal runs connect using the app's database URL.
+    """
+    connection = config.attributes.get("connection")
+    if connection is not None:
+        _run(connection)
+        return
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
-        with context.begin_transaction():
-            context.run_migrations()
+        _run(connection)
 
 
 if context.is_offline_mode():

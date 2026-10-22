@@ -170,8 +170,10 @@ def build_report(results: list[QuestionResult], args: argparse.Namespace) -> str
     lines = [
         "# Footnote evaluation",
         "",
-        f"{len(answerable)} answerable and {len(unanswerable)} unanswerable questions. "
-        f"Model: {model}. top_k={args.top_k}, min_relevance={args.min_relevance}.",
+        (
+            f"{len(answerable)} answerable and {len(unanswerable)} unanswerable questions. "
+            f"Model: {model}. top_k={args.top_k}, min_relevance={args.min_relevance}."
+        ),
         "",
         "| Metric | Result |",
         "|---|---|",
@@ -200,9 +202,11 @@ def build_report(results: list[QuestionResult], args: argparse.Namespace) -> str
     threshold, separated = suggest_threshold(results)
     lines += [
         "",
-        "Top-1 relevance scores: "
-        f"answerable min {min(answerable_scores):.3f} / median {statistics.median(answerable_scores):.3f}; "
-        f"unanswerable max {max(unanswerable_scores):.3f} / median {statistics.median(unanswerable_scores):.3f}.",
+        (
+            "Top-1 relevance scores: "
+            f"answerable min {min(answerable_scores):.3f} / median {statistics.median(answerable_scores):.3f}; "
+            f"unanswerable max {max(unanswerable_scores):.3f} / median {statistics.median(unanswerable_scores):.3f}."
+        ),
         f"Best separating threshold: {threshold:.3f} ({separated}/{len(results)} questions on the right side).",
     ]
 

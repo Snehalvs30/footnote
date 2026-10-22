@@ -8,20 +8,12 @@ import type { DocumentInfo, User } from './types'
 // undefined = still checking the session; null = signed out.
 type SessionState = User | null | undefined
 
+const API_DOWN = "Can't reach the Footnote API. Start it with: uv run fastapi dev app/main.py"
+
 export default function App() {
   const [user, setUser] = useState<SessionState>(undefined)
   const [documents, setDocuments] = useState<DocumentInfo[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
-
-  // On load: is there a valid session cookie?
-  useEffect(() => {
-    getCurrentUser()
-      .then(setUser)
-      .catch(() => {
-        setUser(null)
-        setLoadError("Can't reach the Footnote API. Start it with: uv run fastapi dev app/main.py")
-      })
-  }, [])
 
   const refresh = useCallback(async () => {
     try {
@@ -29,13 +21,31 @@ export default function App() {
       setLoadError(null)
     } catch (err) {
       if (err instanceof UnauthorizedError) setUser(null) // session expired
-      else setLoadError("Can't reach the Footnote API. Start it with: uv run fastapi dev app/main.py")
+      else setLoadError(API_DOWN)
     }
   }, [])
 
+  // On load: is there a valid session cookie? If so, load that user's documents.
+  // State is only set inside the promise callbacks (when the API answers), which is
+  // what effects are for: syncing with something outside React.
   useEffect(() => {
-    if (user) void refresh()
-  }, [user, refresh])
+    getCurrentUser()
+      .then(async (current) => {
+        setUser(current)
+        if (current) await refresh()
+      })
+      .catch(() => {
+        setUser(null)
+        setLoadError(API_DOWN)
+      })
+  }, [refresh])
+
+  // Loading documents is a reaction to an event (signing in), so it happens here,
+  // not in an effect that watches `user`.
+  function handleSignedIn(signedIn: User) {
+    setUser(signedIn)
+    void refresh()
+  }
 
   async function handleSignOut() {
     await signOut()
@@ -53,7 +63,7 @@ export default function App() {
             {loadError}
           </p>
         )}
-        <AuthScreen onSignedIn={setUser} />
+        <AuthScreen onSignedIn={handleSignedIn} />
       </>
     )
   }

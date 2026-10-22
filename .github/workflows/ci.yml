@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend lint and tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      # Installs the Python version in .python-version and the exact package
+      # versions in uv.lock (--locked fails if the lock file is out of date).
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check .
+
+      # The embedding model (~70 MB) is downloaded once, then reused across runs.
+      - name: Cache embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/footnote/fastembed
+          key: fastembed-bge-small-en-v1.5
+
+      # Unit tests plus integration tests. Testcontainers starts PostgreSQL with
+      # pgvector using the Docker engine GitHub's Ubuntu runners already have.
+      - name: Test
+        run: uv run pytest -v
+
+  frontend:
+    name: Frontend lint and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # Type-checks with TypeScript, then builds the production bundle.
+      - name: Build
+        run: npm run build

@@ -26,8 +26,14 @@ dependencies = [
 dev = [
     "pytest>=9.1.1",
     "ruff>=0.17.1",
+    "testcontainers[postgres]>=4.15.0",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's Depends(), Cookie() etc. are markers resolved per request, not
+# shared defaults, so rule B008 doesn't apply to them.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Cookie", "fastapi.Query", "fastapi.File"]

@@ -3,6 +3,8 @@
 Run with: uv run pytest
 """
 
+from itertools import pairwise
+
 import pytest
 
 from app.chunking import TextChunk, chunk_pages, split_text
@@ -30,8 +32,8 @@ def test_consecutive_chunks_overlap():
     text = " ".join(f"word{i}" for i in range(1000))
     chunks = split_text(text, max_chars=1000, overlap=200)
 
-    # The end of each chunk reappears in the next one.
-    for previous, current in zip(chunks, chunks[1:]):
+    # The end of each chunk reappears in the next one. pairwise gives (c0, c1), (c1, c2)...
+    for previous, current in pairwise(chunks):
         assert previous[-50:] in current
 
 

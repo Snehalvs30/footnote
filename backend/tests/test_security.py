@@ -9,7 +9,12 @@ from datetime import UTC, datetime, timedelta
 import jwt
 
 from app.config import settings
-from app.security import create_session_token, hash_password, read_session_token, verify_password
+from app.security import (
+    create_session_token,
+    hash_password,
+    read_session_token,
+    verify_password,
+)
 
 
 def test_hash_is_not_the_password_and_verifies():
