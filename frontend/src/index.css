@@ -1,0 +1,414 @@
+/*
+  Footnote's look: a quiet reading page. Answers are set like a book, in a serif,
+  with real superscript footnote markers. The one bold moment is the highlighter:
+  clicking a marker swipes yellow across the source it came from.
+*/
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Public+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --paper: #eef1f4;
+  --sheet: #f8f9fb;
+  --ink: #1b2433;
+  --ink-soft: #5b6676;
+  --rule: #c9d0da;
+  --highlighter: #f2d74e;
+  --danger: #a3342b;
+
+  --serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --sans: 'Public Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  color-scheme: light;
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #151a22;
+    --sheet: #1c222c;
+    --ink: #e6eaf0;
+    --ink-soft: #9aa4b2;
+    --rule: #333c4a;
+    --highlighter: #7a6a1e;
+    --danger: #e0786e;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Layout: library on the left, the reading page on the right ---- */
+
+.app {
+  display: grid;
+  grid-template-columns: 17rem 1fr;
+  min-height: 100vh;
+}
+
+.banner {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.75rem 1.5rem;
+  background: var(--danger);
+  color: #fff;
+}
+
+/* ---- Library ---- */
+
+.library {
+  padding: 2rem 1.25rem;
+  border-right: 1px solid var(--rule);
+}
+
+.library__title {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.upload {
+  display: block;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.upload:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.upload:focus-within {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.upload--busy {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.library__hint,
+.library__empty {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.library__empty {
+  margin-top: 1.5rem;
+  line-height: 1.5;
+}
+
+.library__error {
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+  color: var(--danger);
+}
+
+.doc-list {
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.doc {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--rule);
+}
+
+.doc__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.doc__name {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.doc__meta {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.doc--failed .doc__meta {
+  color: var(--danger);
+}
+
+.doc__remove {
+  padding: 0.15rem 0.35rem;
+  border: none;
+  background: none;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.doc__remove:hover {
+  color: var(--danger);
+  text-decoration: underline;
+}
+
+/* ---- Reading page ---- */
+
+.reading {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--sheet);
+}
+
+.conversation {
+  flex: 1;
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 2rem;
+}
+
+.welcome {
+  margin-top: 12vh;
+}
+
+.welcome__title {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 3.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* The product's name, footnoted: the identity in one typographic gesture. */
+.welcome__title::after {
+  content: '1';
+  font-size: 0.4em;
+  vertical-align: super;
+  margin-left: 0.1em;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+.welcome__lead {
+  max-width: 34rem;
+  margin: 1rem 0 0;
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.turn + .turn {
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+.turn__question {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.answer-text {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.turn__pending {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.turn__error {
+  margin: 0.75rem 0 0;
+  color: var(--danger);
+}
+
+/* Footnote markers in the answer */
+.cite {
+  padding: 0 0.15em;
+  border: none;
+  background: none;
+  font-family: var(--sans);
+  font-size: 0.75em;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.cite:hover {
+  background: var(--highlighter);
+}
+
+.cite--invalid {
+  font-family: var(--sans);
+  font-size: 0.75em;
+  color: var(--danger);
+  text-decoration: line-through;
+}
+
+/* The footnotes themselves: a short rule, then numbered sources, as in a book. */
+.footnotes {
+  position: relative;
+  margin: 2rem 0 0;
+  padding: 1.25rem 0 0 1.5rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.footnotes::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6rem;
+  border-top: 1px solid var(--ink-soft);
+}
+
+.footnote + .footnote {
+  margin-top: 0.75rem;
+}
+
+.footnote::marker {
+  font-weight: 600;
+}
+
+.footnote__where {
+  display: block;
+  font-weight: 500;
+}
+
+.footnote__excerpt {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--ink-soft);
+}
+
+/* The highlighter swipe: grows from left to right, like a pen across the page. */
+.footnote__excerpt {
+  background-image: linear-gradient(var(--highlighter), var(--highlighter));
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  transition: background-size 450ms ease-out;
+}
+
+.footnote--highlighted .footnote__excerpt {
+  background-size: 100% 100%;
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footnote__excerpt {
+    transition: none;
+  }
+}
+
+/* ---- Question box, docked at the bottom ---- */
+
+.ask {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 1.5rem;
+  background: var(--sheet);
+}
+
+.ask__input {
+  flex: 1;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+.ask__input:focus-visible {
+  border-color: var(--ink);
+  outline: none;
+}
+
+.ask__button {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ask__button:disabled,
+.ask__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Small screens: library above the page ---- */
+
+@media (max-width: 760px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .library {
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .welcome {
+    margin-top: 4vh;
+  }
+
+  .welcome__title {
+    font-size: 2.5rem;
+  }
+}
