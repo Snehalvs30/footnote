@@ -8,7 +8,7 @@ Secrets (API keys) go in backend/.env, which Git ignores. Never commit them.
 
 from typing import Literal
 
-from pydantic import SecretStr
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -43,6 +43,22 @@ class Settings(BaseSettings):
     # Passages scoring below this are treated as irrelevant. If none pass, we answer
     # "not found" without calling the LLM. We'll tune this with the evaluation set.
     min_relevance: float = 0.5
+
+    # ---- Accounts (Day 6) ----
+    # Signs session tokens. This default is for local development ONLY: every real
+    # environment must set FOOTNOTE_JWT_SECRET to a long random value.
+    jwt_secret: SecretStr = SecretStr("local-dev-secret-change-me-0123456789abcdef")
+    session_hours: int = 12
+    # True in production (HTTPS only). False locally, because localhost uses plain HTTP.
+    cookie_secure: bool = False
+
+    @field_validator("jwt_secret")
+    @classmethod
+    def secret_is_long_enough(cls, value: SecretStr) -> SecretStr:
+        # HS256 needs at least 256 bits of key. Refuse to start with a weak one.
+        if len(value.get_secret_value().encode()) < 32:
+            raise ValueError("FOOTNOTE_JWT_SECRET must be at least 32 bytes")
+        return value
 
     @property
     def max_upload_bytes(self) -> int:

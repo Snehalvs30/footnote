@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.embeddings import get_embedder
-from app.routers import ask, documents, search
+from app.routers import ask, auth, documents, search
 
 
 @asynccontextmanager
@@ -34,6 +34,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.include_router(auth.router)
 app.include_router(documents.router)
 app.include_router(search.router)
 app.include_router(ask.router)

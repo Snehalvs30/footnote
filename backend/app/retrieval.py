@@ -27,9 +27,14 @@ def retrieve(
     session: Session,
     query: str,
     top_k: int,
+    owner_id: uuid.UUID,
     document_ids: list[uuid.UUID] | None = None,
 ) -> list[RetrievedChunk]:
-    """The top_k chunks closest in meaning to the query, best first."""
+    """The top_k chunks closest in meaning to the query, best first.
+
+    Only searches documents belonging to owner_id: one user's question can never
+    surface another user's passages.
+    """
     query_vector = get_embedder().embed_query(query)
 
     # Cosine distance: 0 = same direction (same meaning), up to 2 = opposite.
@@ -39,7 +44,11 @@ def retrieve(
     statement = (
         select(Chunk, Document.filename, distance)
         .join(Document, Chunk.document_id == Document.id)
-        .where(Chunk.embedding.is_not(None), Document.status == DocumentStatus.READY)
+        .where(
+            Document.owner_id == owner_id,
+            Chunk.embedding.is_not(None),
+            Document.status == DocumentStatus.READY,
+        )
         .order_by(distance)
         .limit(top_k)
     )

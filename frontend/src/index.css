@@ -412,3 +412,96 @@ input {
     font-size: 2.5rem;
   }
 }
+
+/* ---- Account ---- */
+
+.account {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.85rem;
+}
+
+.account__email {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink-soft);
+}
+
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: inherit;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* ---- Sign in / create account ---- */
+
+.auth {
+  max-width: 24rem;
+  margin: 0 auto;
+  padding: 18vh 1.5rem 3rem;
+}
+
+.auth__lead {
+  margin: 0.75rem 0 2rem;
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.auth__form {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.auth__field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.auth__field input {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--sheet);
+  font-weight: 400;
+}
+
+.auth__field input:focus-visible {
+  border-color: var(--ink);
+  outline: none;
+}
+
+.auth__hint {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+.auth__error {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--danger);
+}
+
+.auth__submit {
+  margin-top: 0.25rem;
+}
+
+.auth__switch {
+  margin: 1.5rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}

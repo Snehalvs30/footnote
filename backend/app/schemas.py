@@ -8,7 +8,17 @@ Field(...) adds validation, like Bean Validation annotations (@Size, @Min...).
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
+
+
+class Credentials(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+
+
+class UserOut(BaseModel):
+    id: uuid.UUID
+    email: str
 
 
 class DocumentOut(BaseModel):
@@ -30,7 +40,7 @@ class ChunkOut(BaseModel):
 class SearchRequest(BaseModel):
     query: str = Field(min_length=1, max_length=1000)
     top_k: int = Field(default=5, ge=1, le=20)
-    # Optional: search only these documents. Omit to search all of them.
+    # Optional: search only these documents. Omit to search all of yours.
     document_ids: list[uuid.UUID] | None = None
 
 
@@ -46,5 +56,5 @@ class SearchResult(BaseModel):
 
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=1000)
-    # Optional: answer only from these documents. Omit to use all of them.
+    # Optional: answer only from these documents. Omit to use all of yours.
     document_ids: list[uuid.UUID] | None = None

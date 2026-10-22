@@ -1,6 +1,7 @@
 """Document endpoints: upload, list, view, inspect chunks, delete.
 
 An APIRouter groups related endpoints, like a Spring @RestController class.
+Every endpoint requires a signed-in user and only ever touches that user's documents.
 """
 
 import uuid
@@ -14,8 +15,9 @@ from app.config import settings
 from app.db import get_session
 from app.embeddings import get_embedder
 from app.extraction import ExtractionError, extract_pages
-from app.models import Chunk, Document, DocumentStatus
+from app.models import Chunk, Document, DocumentStatus, User
 from app.schemas import ChunkOut, DocumentOut
+from app.security import get_current_user
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -23,7 +25,11 @@ SUPPORTED_EXTENSIONS = {".pdf": "pdf", ".txt": "text", ".md": "text"}
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def upload_document(file: UploadFile, session: Session = Depends(get_session)) -> DocumentOut:
+def upload_document(
+    file: UploadFile,
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+) -> DocumentOut:
     """Uploads a PDF, .txt or .md file, extracts its text, splits it into chunks,
     and computes an embedding for each chunk so it can be searched.
 
@@ -43,6 +49,7 @@ def upload_document(file: UploadFile, session: Session = Depends(get_session)) -
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "The file is empty")
 
     document = Document(
+        owner_id=user.id,
         filename=file.filename or "untitled",
         content_type=file.content_type or "application/octet-stream",
         status=DocumentStatus.PROCESSING,
@@ -71,30 +78,42 @@ def upload_document(file: UploadFile, session: Session = Depends(get_session)) -
 
 
 @router.get("")
-def list_documents(session: Session = Depends(get_session)) -> list[DocumentOut]:
-    """All documents, newest first, with their chunk counts."""
+def list_documents(
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+) -> list[DocumentOut]:
+    """Your documents, newest first, with their chunk counts."""
     chunk_counts = (
         select(Chunk.document_id, func.count().label("n")).group_by(Chunk.document_id).subquery()
     )
     rows = session.execute(
         select(Document, func.coalesce(chunk_counts.c.n, 0))
         .outerjoin(chunk_counts, chunk_counts.c.document_id == Document.id)
+        .where(Document.owner_id == user.id)
         .order_by(Document.created_at.desc())
     ).all()
     return [_to_out(document, count) for document, count in rows]
 
 
 @router.get("/{document_id}")
-def get_document(document_id: uuid.UUID, session: Session = Depends(get_session)) -> DocumentOut:
-    document = _get_or_404(session, document_id)
+def get_document(
+    document_id: uuid.UUID,
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+) -> DocumentOut:
+    document = _get_or_404(session, document_id, user)
     count = session.scalar(select(func.count()).select_from(Chunk).where(Chunk.document_id == document_id))
     return _to_out(document, count or 0)
 
 
 @router.get("/{document_id}/chunks")
-def list_chunks(document_id: uuid.UUID, session: Session = Depends(get_session)) -> list[ChunkOut]:
+def list_chunks(
+    document_id: uuid.UUID,
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+) -> list[ChunkOut]:
     """Shows how a document was split. Handy for checking the chunking works well."""
-    document = _get_or_404(session, document_id)
+    document = _get_or_404(session, document_id, user)
     return [
         ChunkOut(chunk_index=c.chunk_index, page_number=c.page_number, content=c.content)
         for c in document.chunks
@@ -102,8 +121,12 @@ def list_chunks(document_id: uuid.UUID, session: Session = Depends(get_session))
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_document(document_id: uuid.UUID, session: Session = Depends(get_session)) -> Response:
-    document = _get_or_404(session, document_id)
+def delete_document(
+    document_id: uuid.UUID,
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+) -> Response:
+    document = _get_or_404(session, document_id, user)
     session.delete(document)  # its chunks are deleted too (cascade)
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -119,9 +142,10 @@ def _file_kind(filename: str | None) -> str | None:
     return SUPPORTED_EXTENSIONS.get(extension)
 
 
-def _get_or_404(session: Session, document_id: uuid.UUID) -> Document:
+def _get_or_404(session: Session, document_id: uuid.UUID, user: User) -> Document:
+    """Someone else's document gets the same 404 as a missing one, so its existence isn't revealed."""
     document = session.get(Document, document_id)
-    if document is None:
+    if document is None or document.owner_id != user.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found")
     return document
 
