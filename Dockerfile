@@ -5,7 +5,10 @@
 #   docker build -t footnote .
 
 # ---- Stage 1: build the React frontend -------------------------------------
-FROM node:24-slim AS frontend
+# Built natively on the build machine ($BUILDPLATFORM), even when the final image
+# targets another CPU: the output is plain HTML/CSS/JS, the same for every CPU.
+# This skips slow CPU emulation for the npm build in multi-platform builds.
+FROM --platform=$BUILDPLATFORM node:24-slim AS frontend
 WORKDIR /frontend
 # Dependencies first, so this layer is cached until package-lock.json changes.
 COPY frontend/package.json frontend/package-lock.json ./
