@@ -629,7 +629,13 @@ input {
   font-family: var(--serif);
   font-size: 1rem;
   line-height: 1.75;
-  white-space: pre-wrap;
+  color: var(--ink-soft); /* surrounding context, quieter than the cited sentence */
+}
+
+.source-panel__note {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
 }
 
 /* The highlighter: sweeps left to right across each line, like a pen. */

@@ -163,6 +163,7 @@ export function ChatPanel({ canAsk, hasDocuments, onFiles, onAddSamples, addingS
 
       <SourcePanel
         sources={selectedTurn?.sources ?? []}
+        answer={selectedTurn?.answer ?? ''}
         selected={selected?.number ?? null}
         onSelect={(number) => selected && setSelected({ turnId: selected.turnId, number })}
         onClose={() => setSelected(null)}

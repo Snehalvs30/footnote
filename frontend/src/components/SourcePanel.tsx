@@ -1,9 +1,12 @@
-import { stripMarkdown } from '../text'
+import { Fragment } from 'react'
+import { citedSentences, splitSentences, stripMarkdown } from '../text'
 import type { Source } from '../types'
 
 interface Props {
   /** The sources of the answer whose footnote was clicked (empty if none). */
   sources: Source[]
+  /** That answer's text, used to find which sentences of the passage it cites. */
+  answer: string
   selected: number | null
   onSelect: (sourceNumber: number) => void
   onClose: () => void
@@ -13,8 +16,10 @@ interface Props {
  * The right-hand pane: the full passage behind a footnote. Tabs switch between
  * the sources of the same answer. On phones it slides up from the bottom.
  */
-export function SourcePanel({ sources, selected, onSelect, onClose }: Props) {
+export function SourcePanel({ sources, answer, selected, onSelect, onClose }: Props) {
   const source = sources.find((candidate) => candidate.number === selected)
+  const sentences = source ? splitSentences(stripMarkdown(source.content)) : []
+  const cited = source ? citedSentences(answer, source.number, sentences) : new Set<number>()
 
   return (
     <aside className={`source-panel ${source ? 'source-panel--open' : ''}`} aria-label="Source">
@@ -58,8 +63,16 @@ export function SourcePanel({ sources, selected, onSelect, onClose }: Props) {
           <article className="source-panel__page">
             {/* key: a new source remounts the passage, which replays the highlighter sweep */}
             <p key={`${source.document_id}-${source.chunk_index}`} className="source-panel__text">
-              <mark className="highlight">{stripMarkdown(source.content)}</mark>
+              {sentences.map((sentence, index) => (
+                <Fragment key={index}>
+                  {index > 0 && ' '}
+                  {cited.has(index) ? <mark className="highlight">{sentence}</mark> : sentence}
+                </Fragment>
+              ))}
             </p>
+            {cited.size === 0 && (
+              <p className="source-panel__note">The whole passage was given to the model as this source.</p>
+            )}
           </article>
         </>
       )}

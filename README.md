@@ -6,9 +6,9 @@
 
 Upload PDFs, text or Markdown files, ask a question in plain English, and get an answer that streams in word by word, with numbered footnotes. Click a footnote and the source passage is highlighted, so every claim can be checked. If the answer isn't in your documents, Footnote says so instead of guessing.
 
-![Footnote answering a question, with its source highlighted](docs/images/cloud-answer.png)
+![Footnote's research desk: documents, an answer with footnotes, and the cited passage highlighted](docs/images/research-desk.png)
 
-*The deployed app on AWS, answering from a sample employee handbook. Footnote 1 is clicked, so its source is highlighted.*
+*Documents on the left, the conversation in the middle, and on the right the passage behind the selected footnote, highlighted.*
 
 <!-- Demo video: add the link here once recorded -->
 
@@ -21,7 +21,7 @@ Upload PDFs, text or Markdown files, ask a question in plain English, and get an
 | **Grounded answers** | Answers come only from your documents, with a citation on every claim. Unanswerable questions get *"I couldn't find this in your documents."* |
 | **Measured quality** | A 26-question evaluation suite: 100% retrieval hit rate (MRR 0.93), 20/20 correct and cited answers, 6/6 correct refusals |
 | **Private by design** | Accounts with HttpOnly session cookies. Integration tests prove one user can never see another's documents, through listing, search, or answers. |
-| **Tested** | 33 tests (19 unit, 14 integration against a real PostgreSQL via Testcontainers), run by GitHub Actions on every push in about 30 seconds |
+| **Tested** | 34 tests (19 unit, 15 integration against a real PostgreSQL via Testcontainers), run by GitHub Actions on every push in about 30 seconds |
 | **Deployed with Terraform** | 36 AWS resources: VPC, RDS PostgreSQL + pgvector, ECS Fargate, Application Load Balancer, CloudFront, Secrets Manager, ECR |
 | **Swappable LLM** | Claude (Anthropic API), OpenAI, or a free local model through Ollama, chosen with one setting |
 
@@ -53,6 +53,22 @@ flowchart LR
 **Answering.** The question is embedded the same way, and the six closest chunks *belonging to the signed-in user* are retrieved. Chunks below a relevance threshold are dropped; if none remain, Footnote answers "not found" without calling the LLM, which is cheaper and leaves nothing to hallucinate from. Otherwise the passages are numbered `[1]`, `[2]`... and sent to the LLM with strict rules: answer only from these sources, cite every claim, never invent a source.
 
 **Streaming.** Answers arrive as Server-Sent Events: a `sources` event first (so the UI can show sources immediately), then `token` events as the model writes, then `done`. The browser's `EventSource` only supports GET, so the frontend reads the POST response stream itself. In the UI, citations become clickable footnote markers; a citation of a source that doesn't exist is shown struck through rather than hidden.
+
+---
+
+## The interface
+
+A three-pane "research desk": your documents, the conversation, and the source behind whichever footnote you select. Each pane scrolls on its own, like a desktop app, and on phones the panes stack and the source panel slides up from the bottom.
+
+| Feature | Details |
+|---|---|
+| **Source panel** | Clicking a footnote marker or a source chip opens the full cited passage, with a highlighter sweep that replays for each source (and is skipped for people who turn off motion in their system settings). Numbered tabs switch between an answer's sources. |
+| **Drag-and-drop uploads** | Drop several files at once. Each is checked in the browser first (type, size, empty), then uploads one at a time with real progress, using `XMLHttpRequest` because `fetch` can't report upload progress. |
+| **Sample documents** | New accounts can load the evaluation corpus in one click, to try Footnote without their own files |
+| **Account menu** | Opens from the initials in the top bar; closes on Escape (returning focus to the button) or a click outside, and works fully from the keyboard |
+| **Design** | A light "Library green" palette, with three typefaces given one job each: DM Serif Display for headings, DM Sans for the interface, and Source Serif for answers and sources. Hand-written CSS with design tokens as custom properties; no UI library. |
+
+![Empty workspace with a drop zone and a sample documents button](docs/images/empty-state.png)
 
 ---
 
@@ -148,6 +164,10 @@ terraform destroy
 Set `region` in `infra/variables.tf` to a region your account allows.
 </details>
 
+![Footnote running on AWS behind CloudFront](docs/images/cloud-answer.png)
+
+*The deployed app on AWS (an earlier version of the interface), answering from the sample handbook.*
+
 ![Terraform creating 36 resources](docs/images/terraform-apply.png)
 
 ---
@@ -166,14 +186,14 @@ Set `region` in `infra/variables.tf` to a region your account allows.
 
 ```bash
 cd backend
-uv run pytest        # 33 tests; Docker must be running for the integration tests
+uv run pytest        # 34 tests; Docker must be running for the integration tests
 uv run ruff check .
 ```
 
 | Layer | What's tested |
 |---|---|
 | Unit (19) | Chunking (sizes, overlap, page numbers), embeddings (dimensions, similar sentences closer than unrelated ones), the answer stream (event order, "not found" without calling the LLM, LLM failure ends cleanly), password hashing and session tokens (tampered, forged and expired tokens rejected) |
-| Integration (14) | The real API against a throwaway PostgreSQL with the real migrations: sign-up, login and logout; every protected endpoint requires sign-in; upload, list and delete; search; streamed answers; and **user isolation** across every path data could leak |
+| Integration (15) | The real API against a throwaway PostgreSQL with the real migrations: sign-up, login and logout; every protected endpoint requires sign-in; upload, list and delete; adding sample documents only once; search; streamed answers; and **user isolation** across every path data could leak |
 
 LLM calls in tests use a fake LLM: free, instant, and deterministic.
 
@@ -206,6 +226,8 @@ npm run dev
 
 To use a free local model instead of an API: `ollama pull llama3.2:3b` and set `FOOTNOTE_LLM_PROVIDER=ollama`.
 
+Once signed in, **Try with sample documents** loads three short documents to ask questions about.
+
 ---
 
 ## Tech stack
@@ -215,7 +237,7 @@ To use a free local model instead of an API: `ollama pull llama3.2:3b` and set `
 | Backend | Python 3.12, FastAPI, SQLAlchemy 2, Alembic, Pydantic, uv |
 | Retrieval | PostgreSQL 17, pgvector (HNSW, cosine), fastembed with `bge-small-en-v1.5` |
 | LLMs | Anthropic Claude, OpenAI, or Ollama, behind one interface |
-| Frontend | React, TypeScript, Vite |
+| Frontend | React, TypeScript, Vite, hand-written CSS |
 | Auth | Argon2 (pwdlib), JWT (PyJWT) in HttpOnly cookies |
 | Testing | pytest, Testcontainers, Ruff, ESLint |
 | Infrastructure | Docker, Terraform, AWS (ECS Fargate, RDS, ALB, CloudFront, Secrets Manager, ECR, CloudWatch), GitHub Actions |
@@ -244,6 +266,7 @@ footnote/
 - **Harder evaluation.** The current set has saturated. Next: paraphrased questions, answers spanning two documents, and near-miss unanswerables (*"How many PTO days do part-time employees get?"* when the handbook only says "in proportion").
 - **More flexible grading.** Keyword checks can fail correct answers worded unexpectedly; an LLM grader would be more flexible, at the cost of money and its own variability.
 - **Background ingestion.** Uploads are processed during the request; large documents should be processed by a background worker.
+- **The real page in the source panel.** The panel shows the cited passage; the next step is rendering the original PDF page (with pdf.js) and highlighting the passage in place, which means storing original files (on disk locally, S3 on AWS).
 - **Scanned PDFs** (images of text) aren't supported; that needs OCR.
 - **Production hardening.** App containers in private subnets with a NAT gateway or VPC endpoints; a Multi-AZ database with deletion protection; a secret header between CloudFront and the load balancer (CloudFront's IP ranges are shared by all its customers); Terraform state in encrypted S3 with locking; login rate limiting.
 - **Small polish.** Detect duplicate uploads by file hash; start chunk overlaps at a word boundary.
