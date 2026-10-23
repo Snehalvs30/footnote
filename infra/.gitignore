@@ -1,0 +1,6 @@
+# Terraform state contains secrets (database password, API key). Never commit it.
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+crash.log
