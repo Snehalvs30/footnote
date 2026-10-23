@@ -5,6 +5,7 @@ Every endpoint requires a signed-in user and only ever touches that user's docum
 """
 
 import uuid
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, status
 from sqlalchemy import func, select
@@ -20,6 +21,9 @@ from app.security import get_current_user
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 SUPPORTED_EXTENSIONS = {".pdf": "pdf", ".txt": "text", ".md": "text"}
+
+# The evaluation corpus doubles as sample documents for trying Footnote out.
+SAMPLE_DIR = Path(__file__).resolve().parents[2] / "eval" / "corpus"
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -55,6 +59,32 @@ def upload_document(
         kind=kind,
     )
     return _to_out(document, len(document.chunks))
+
+
+@router.post("/samples", status_code=status.HTTP_201_CREATED)
+def add_sample_documents(
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
+) -> list[DocumentOut]:
+    """Adds the three Northwind sample documents to your library, skipping any you already have.
+
+    Returns only the documents it added, so calling it twice adds nothing the second time.
+    """
+    existing = set(session.scalars(select(Document.filename).where(Document.owner_id == user.id)))
+    added: list[DocumentOut] = []
+    for path in sorted(SAMPLE_DIR.glob("*.md")):
+        if path.name in existing:
+            continue
+        document = ingest(
+            session,
+            owner_id=user.id,
+            filename=path.name,
+            content_type="text/markdown",
+            data=path.read_bytes(),
+            kind="text",
+        )
+        added.append(_to_out(document, len(document.chunks)))
+    return added
 
 
 @router.get("")

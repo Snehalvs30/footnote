@@ -21,6 +21,8 @@ export interface Source {
   chunk_index: number
   score: number
   excerpt: string
+  /** The full passage (up to about 1,000 characters), shown in the source panel. */
+  content: string
 }
 
 export interface User {

@@ -5,6 +5,7 @@ import { ChatPanel } from './components/ChatPanel'
 import { DocumentPanel } from './components/DocumentPanel'
 import { TopBar } from './components/TopBar'
 import type { DocumentInfo, User } from './types'
+import { useUploads } from './useUploads'
 
 // undefined = still checking the session; null = signed out.
 type SessionState = User | null | undefined
@@ -25,6 +26,9 @@ export default function App() {
       else setLoadError(API_DOWN)
     }
   }, [])
+
+  // One upload queue, used by both the sidebar and the empty-state drop zone.
+  const { uploads, uploadFiles, dismiss, addSamples, addingSamples, samplesError } = useUploads(refresh)
 
   // On load: is there a valid session cookie? If so, load that user's documents.
   // State is only set inside the promise callbacks (when the API answers), which is
@@ -80,9 +84,23 @@ export default function App() {
       )}
       <TopBar email={user.email} onSignOut={handleSignOut} />
       <div className="workspace">
-        <DocumentPanel documents={documents} onChanged={refresh} />
+        <DocumentPanel
+          documents={documents}
+          onChanged={refresh}
+          uploads={uploads}
+          onFiles={uploadFiles}
+          onDismissUpload={dismiss}
+        />
         {/* key: a different user gets a fresh, empty conversation */}
-        <ChatPanel key={user.id} canAsk={canAsk} />
+        <ChatPanel
+          key={user.id}
+          canAsk={canAsk}
+          hasDocuments={documents.length > 0}
+          onFiles={uploadFiles}
+          onAddSamples={addSamples}
+          addingSamples={addingSamples}
+          samplesError={samplesError}
+        />
       </div>
     </div>
   )

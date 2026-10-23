@@ -117,6 +117,20 @@ def test_delete_removes_the_document(make_client):
     assert client.get("/documents").json() == []
 
 
+def test_sample_documents_are_added_once(make_client):
+    client = make_client()
+    sign_up(client)
+
+    first = client.post("/documents/samples")
+    second = client.post("/documents/samples")
+
+    assert first.status_code == 201
+    assert len(first.json()) == 3
+    assert all(document["status"] == "ready" for document in first.json())
+    assert second.json() == []  # nothing added twice
+    assert len(client.get("/documents").json()) == 3
+
+
 # ---- Search and answers -------------------------------------------------------
 
 def test_search_finds_the_relevant_passage(make_client):

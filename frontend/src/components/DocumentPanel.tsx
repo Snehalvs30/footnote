@@ -1,37 +1,24 @@
 import { useState } from 'react'
-import type { ChangeEvent } from 'react'
-import { deleteDocument, uploadDocument } from '../api'
+import { deleteDocument } from '../api'
 import type { DocumentInfo } from '../types'
+import type { Upload } from '../useUploads'
+import { DropZone } from './DropZone'
+import { UploadList } from './UploadList'
 
 interface Props {
   documents: DocumentInfo[]
   onChanged: () => void
+  uploads: Upload[]
+  onFiles: (files: File[]) => void
+  onDismissUpload: (id: number) => void
 }
 
-export function DocumentPanel({ documents, onChanged }: Props) {
-  const [uploading, setUploading] = useState(false)
+export function DocumentPanel({ documents, onChanged, uploads, onFiles, onDismissUpload }: Props) {
   const [error, setError] = useState<string | null>(null)
-
-  async function handleFile(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    event.target.value = '' // so choosing the same file again still triggers a change
-    if (!file) return
-
-    setUploading(true)
-    setError(null)
-    try {
-      const document = await uploadDocument(file)
-      if (document.status === 'failed') setError(`${document.filename}: ${document.error}`)
-      onChanged()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
-    } finally {
-      setUploading(false)
-    }
-  }
 
   async function handleDelete(document: DocumentInfo) {
     if (!window.confirm(`Remove ${document.filename}?`)) return
+    setError(null)
     try {
       await deleteDocument(document.id)
       onChanged()
@@ -44,17 +31,8 @@ export function DocumentPanel({ documents, onChanged }: Props) {
     <aside className="library">
       <h2 className="library__title">Your documents</h2>
 
-      <label className={`upload ${uploading ? 'upload--busy' : ''}`}>
-        <input
-          type="file"
-          accept=".pdf,.txt,.md"
-          onChange={handleFile}
-          disabled={uploading}
-          className="visually-hidden"
-        />
-        {uploading ? 'Reading document…' : 'Add a document'}
-      </label>
-      <p className="library__hint">PDF, .txt or .md, up to 10 MB</p>
+      <DropZone onFiles={onFiles} size="compact" />
+      <UploadList uploads={uploads} onDismiss={onDismissUpload} />
 
       {error && (
         <p className="library__error" role="alert">
@@ -63,13 +41,15 @@ export function DocumentPanel({ documents, onChanged }: Props) {
       )}
 
       {documents.length === 0 ? (
-        <p className="library__empty">Nothing here yet. Add a document to start asking questions.</p>
+        <p className="library__empty">No documents yet.</p>
       ) : (
         <ul className="doc-list">
           {documents.map((document) => (
             <li key={document.id} className={`doc doc--${document.status}`}>
               <div className="doc__main">
-                <span className="doc__name">{document.filename}</span>
+                <span className="doc__name" title={document.filename}>
+                  {document.filename}
+                </span>
                 <span className="doc__meta">
                   {document.status === 'ready' &&
                     `${document.page_count} ${document.page_count === 1 ? 'page' : 'pages'}, ${document.chunk_count} passages`}

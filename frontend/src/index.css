@@ -63,16 +63,22 @@ input {
 
 /* ---- Layout: library on the left, the reading page on the right ---- */
 
+/* ---- Layout -----------------------------------------------------------------
+   Desktop: a fixed-height app. Top bar, then three panes that scroll on their own:
+   documents | conversation | source. Phones: the panes stack and the page scrolls.
+*/
+
 .app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 .workspace {
   flex: 1;
+  min-height: 0; /* lets the panes scroll instead of growing the page */
   display: grid;
-  grid-template-columns: 17rem 1fr;
+  grid-template-columns: 16rem minmax(0, 1fr) minmax(18rem, 26rem);
 }
 
 .banner {
@@ -82,10 +88,32 @@ input {
   color: #fff;
 }
 
-/* ---- Library ---- */
+.button-secondary {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button-secondary:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.button-secondary:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* ---- Documents (left) ---- */
 
 .library {
-  padding: 2rem 1.25rem;
+  overflow-y: auto;
+  padding: 1.5rem 1.1rem;
+  background: var(--paper);
   border-right: 1px solid var(--rule);
 }
 
@@ -96,42 +124,10 @@ input {
   font-weight: 400;
 }
 
-.upload {
-  display: block;
-  padding: 0.6rem 0.9rem;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  border-radius: 6px;
-  text-align: center;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.upload:hover {
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
-.upload:focus-within {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.upload--busy {
-  cursor: progress;
-  opacity: 0.7;
-}
-
-.library__hint,
 .library__empty {
-  margin: 0.5rem 0 0;
+  margin: 1.25rem 0 0;
   font-size: 0.85rem;
   color: var(--ink-soft);
-}
-
-.library__empty {
-  margin-top: 1.5rem;
-  line-height: 1.5;
 }
 
 .library__error {
@@ -141,7 +137,7 @@ input {
 }
 
 .doc-list {
-  margin: 1.5rem 0 0;
+  margin: 1.25rem 0 0;
   padding: 0;
   list-style: none;
 }
@@ -163,7 +159,9 @@ input {
   display: block;
   font-size: 0.9rem;
   font-weight: 500;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .doc__meta {
@@ -191,9 +189,127 @@ input {
   text-decoration: underline;
 }
 
-/* ---- Reading page ---- */
+/* ---- Drop zone and upload queue ---- */
+
+.dropzone {
+  border: 1.5px dashed var(--accent);
+  border-radius: 10px;
+  background: var(--sheet);
+  text-align: center;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+.dropzone--compact {
+  padding: 0.8rem 0.6rem;
+}
+
+.dropzone--large {
+  padding: 1.75rem 1.25rem;
+}
+
+.dropzone--active {
+  border-style: solid;
+  background: var(--highlighter);
+}
+
+.dropzone__arrow {
+  display: block;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.dropzone--large .dropzone__arrow {
+  font-size: 1.6rem;
+}
+
+.dropzone__title {
+  margin: 0.4rem 0 0.2rem;
+  font-weight: 600;
+}
+
+.dropzone__hint {
+  margin: 0.3rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.uploads {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.upload-item {
+  font-size: 0.8rem;
+}
+
+.upload-item__row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.upload-item__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.upload-item__dismiss {
+  padding: 0 0.3rem;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.upload-item__status {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--ink-soft);
+}
+
+.upload-item--failed .upload-item__status {
+  color: var(--danger);
+}
+
+.progress {
+  height: 4px;
+  margin-top: 0.3rem;
+  border-radius: 2px;
+  background: var(--rule);
+  overflow: hidden;
+}
+
+.progress__bar {
+  height: 100%;
+  background: var(--accent);
+  transition: width 150ms linear;
+}
+
+/* While the server reads the file, the full bar gently pulses. */
+.upload-item--reading .progress__bar {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ---- Conversation (middle) ---- */
 
 .reading {
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: var(--sheet);
@@ -201,14 +317,18 @@ input {
 
 .conversation {
   flex: 1;
-  width: 100%;
+  overflow-y: auto;
+  padding: 2.5rem clamp(1.25rem, 4vw, 3rem) 2rem;
+}
+
+.conversation > * {
   max-width: 42rem;
-  margin: 0 auto;
-  padding: 3rem 1.5rem 2rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .welcome {
-  margin-top: 12vh;
+  margin-top: 8vh;
 }
 
 .welcome__title {
@@ -219,14 +339,12 @@ input {
   line-height: 1.05;
 }
 
-/* The product's name, footnoted: the identity in one typographic gesture. */
 .welcome__title::after {
   content: '1';
   font-family: var(--sans);
   font-size: 0.32em;
   vertical-align: super;
   margin-left: 0.1em;
-  font-weight: 400;
   color: var(--accent);
 }
 
@@ -239,9 +357,26 @@ input {
   color: var(--ink-soft);
 }
 
+.welcome__start {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.welcome__start .dropzone {
+  width: 100%;
+}
+
+.welcome__error {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--danger);
+}
+
 .turn + .turn {
-  margin-top: 3rem;
-  padding-top: 2.5rem;
+  margin-top: 2.5rem;
+  padding-top: 2rem;
   border-top: 1px solid var(--rule);
 }
 
@@ -275,8 +410,9 @@ input {
 
 /* Footnote markers in the answer */
 .cite {
-  padding: 0 0.15em;
+  padding: 0 0.2em;
   border: none;
+  border-radius: 3px;
   background: none;
   font-family: var(--sans);
   font-size: 0.75em;
@@ -287,8 +423,11 @@ input {
   cursor: pointer;
 }
 
-.cite:hover {
+.cite:hover,
+.cite[aria-pressed='true'] {
   background: var(--highlighter);
+  color: var(--ink);
+  text-decoration: none;
 }
 
 .cite--invalid {
@@ -298,81 +437,75 @@ input {
   text-decoration: line-through;
 }
 
-/* The footnotes themselves: a short rule, then numbered sources, as in a book. */
-.footnotes {
-  position: relative;
-  margin: 2rem 0 0;
-  padding: 1.25rem 0 0 1.5rem;
-  font-size: 0.85rem;
-  line-height: 1.5;
+/* The sources of an answer, as small chips below it */
+.source-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.footnotes::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 6rem;
-  border-top: 1px solid var(--ink-soft);
-}
-
-.footnote + .footnote {
-  margin-top: 0.75rem;
-}
-
-.footnote::marker {
-  font-weight: 600;
-}
-
-.footnote__where {
-  display: block;
-  font-weight: 500;
-}
-
-.footnote__excerpt {
-  display: block;
-  margin-top: 0.15rem;
+.source-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 16rem;
+  padding: 0.25rem 0.6rem 0.25rem 0.3rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 0.8rem;
   color: var(--ink-soft);
+  cursor: pointer;
 }
 
-/* The highlighter swipe: grows from left to right, like a pen across the page. */
-.footnote__excerpt {
-  background-image: linear-gradient(var(--highlighter), var(--highlighter));
-  background-repeat: no-repeat;
-  background-size: 0% 100%;
-  transition: background-size 450ms ease-out;
-}
-
-.footnote--highlighted .footnote__excerpt {
-  background-size: 100% 100%;
+.source-chip:hover,
+.source-chip[aria-pressed='true'] {
+  border-color: var(--accent);
   color: var(--ink);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .footnote__excerpt {
-    transition: none;
-  }
+.source-chip[aria-pressed='true'] {
+  background: var(--highlighter);
 }
 
-/* ---- Question box, docked at the bottom ---- */
+.source-chip__number {
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.source-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Question box, at the bottom of the conversation ---- */
 
 .ask {
-  position: sticky;
-  bottom: 0;
   display: flex;
   gap: 0.5rem;
-  width: 100%;
-  max-width: 42rem;
+  /* Same width as the conversation column, keeping its side padding. */
+  width: min(42rem, calc(100% - 2 * clamp(1.25rem, 4vw, 3rem)));
   margin: 0 auto;
-  padding: 1rem 1.5rem 1.5rem;
-  background: var(--sheet);
+  padding: 1rem 0 1.5rem;
 }
 
 .ask__input {
   flex: 1;
+  min-width: 0;
   padding: 0.75rem 0.9rem;
   border: 1px solid var(--rule);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--paper);
 }
 
@@ -384,7 +517,7 @@ input {
 .ask__button {
   padding: 0.75rem 1.25rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--accent);
   color: var(--on-accent);
   font-weight: 600;
@@ -397,9 +530,150 @@ input {
   cursor: not-allowed;
 }
 
-/* ---- Small screens: library above the page ---- */
+/* ---- Source panel (right) ---- */
 
-@media (max-width: 760px) {
+.source-panel {
+  overflow-y: auto;
+  padding: 1.25rem 1.25rem 2rem;
+  background: var(--paper);
+  border-left: 1px solid var(--rule);
+}
+
+.source-panel__empty {
+  margin-top: 30vh;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.source-panel__empty-mark {
+  margin: 0 0 0.5rem;
+  font-family: var(--display);
+  font-size: 2.5rem;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.source-panel__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.source-panel__eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.source-panel__where {
+  margin: 0.15rem 0 0;
+  font-family: var(--display);
+  font-size: 1.1rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.source-panel__close {
+  padding: 0 0.35rem;
+  border: none;
+  background: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.source-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin: 1rem 0 0;
+}
+
+.source-tab {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--sheet);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.source-tab:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.source-tab[aria-current='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* The passage, set like a page */
+.source-panel__page {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.source-panel__text {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+/* The highlighter: sweeps left to right across each line, like a pen. */
+.highlight {
+  padding: 0.05em 0;
+  background-color: transparent;
+  background-image: linear-gradient(var(--highlighter), var(--highlighter));
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  color: var(--ink);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone; /* each wrapped line gets its own sweep */
+  animation: highlight-sweep 500ms ease-out;
+}
+
+@keyframes highlight-sweep {
+  from {
+    background-size: 0% 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlight,
+  .upload-item--reading .progress__bar {
+    animation: none;
+  }
+}
+
+/* ---- Medium screens: narrower source panel ---- */
+
+@media (max-width: 1100px) {
+  .workspace {
+    grid-template-columns: 14rem minmax(0, 1fr) 18rem;
+  }
+}
+
+/* ---- Phones and small tablets: stack the panes ---- */
+
+@media (max-width: 860px) {
+  .app {
+    height: auto;
+    min-height: 100vh;
+  }
+
   .workspace {
     grid-template-columns: 1fr;
   }
@@ -407,6 +681,28 @@ input {
   .library {
     border-right: none;
     border-bottom: 1px solid var(--rule);
+  }
+
+  .conversation {
+    overflow-y: visible;
+  }
+
+  /* The source panel becomes a sheet that slides up from the bottom when open. */
+  .source-panel {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 20;
+    max-height: 70vh;
+    border-left: none;
+    border-top: 1px solid var(--rule);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 24px rgb(30 53 41 / 12%);
+    transform: translateY(100%);
+    transition: transform 250ms ease-out;
+  }
+
+  .source-panel--open {
+    transform: translateY(0);
   }
 
   .welcome {

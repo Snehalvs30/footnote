@@ -1,6 +1,8 @@
 interface Props {
   text: string
   sourceCount: number
+  /** The footnote currently open in the source panel, if it belongs to this answer. */
+  activeNumber: number | null
   onCite: (sourceNumber: number) => void
 }
 
@@ -9,7 +11,7 @@ interface Props {
  * markers you can click. A number with no matching source is shown struck
  * through: the model cited something it wasn't given.
  */
-export function AnswerText({ text, sourceCount, onCite }: Props) {
+export function AnswerText({ text, sourceCount, activeNumber, onCite }: Props) {
   // split() with a capture group keeps the matches: "a [1] b" -> ["a ", "[1]", " b"]
   const parts = text.split(/(\[\d+\])/g)
 
@@ -32,6 +34,7 @@ export function AnswerText({ text, sourceCount, onCite }: Props) {
             <button
               type="button"
               className="cite"
+              aria-pressed={number === activeNumber}
               onClick={() => onCite(number)}
               aria-label={`Show source ${number}`}
             >

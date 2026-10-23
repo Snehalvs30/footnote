@@ -72,10 +72,41 @@ export async function listDocuments(): Promise<DocumentInfo[]> {
   return (await check(await fetch(`${BASE}/documents`))).json()
 }
 
-export async function uploadDocument(file: File): Promise<DocumentInfo> {
-  const form = new FormData()
-  form.append('file', file)
-  return (await check(await fetch(`${BASE}/documents`, { method: 'POST', body: form }))).json()
+/**
+ * Uploads one file, reporting progress from 0 to 1 as its bytes are sent.
+ *
+ * Uses XMLHttpRequest rather than fetch, because fetch can't report upload
+ * progress. Once every byte is sent (progress 1), the server still extracts,
+ * chunks and embeds the file before it responds.
+ */
+export function uploadDocument(file: File, onProgress: (fraction: number) => void): Promise<DocumentInfo> {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest()
+    request.open('POST', `${BASE}/documents`)
+    request.responseType = 'json'
+
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(event.loaded / event.total)
+    }
+    request.upload.onload = () => onProgress(1)
+
+    request.onload = () => {
+      const body = request.response as { detail?: unknown } | null
+      if (request.status === 401) reject(new UnauthorizedError('Sign in to continue'))
+      else if (request.status >= 200 && request.status < 300) resolve(request.response as DocumentInfo)
+      else reject(new Error(typeof body?.detail === 'string' ? body.detail : `Upload failed (${request.status})`))
+    }
+    request.onerror = () => reject(new Error("Couldn't reach the server. Is the API running?"))
+
+    const form = new FormData()
+    form.append('file', file)
+    request.send(form)
+  })
+}
+
+/** Adds the Northwind sample documents. Returns only the ones newly added. */
+export async function addSampleDocuments(): Promise<DocumentInfo[]> {
+  return (await check(await fetch(`${BASE}/documents/samples`, { method: 'POST' }))).json()
 }
 
 export async function deleteDocument(id: string): Promise<void> {

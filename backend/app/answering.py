@@ -55,6 +55,7 @@ def answer_events(question: str, chunks: list[RetrievedChunk], llm: LLMClient) -
                 "chunk_index": chunk.chunk_index,
                 "score": chunk.score,
                 "excerpt": chunk.content[:300],
+                "content": chunk.content,  # the full passage, for the source panel
             }
             for number, chunk in enumerate(chunks, start=1)
         ],
