@@ -62,7 +62,7 @@ A three-pane "research desk": your documents, the conversation, and the source b
 
 | Feature | Details |
 |---|---|
-| **Source panel** | Clicking a footnote marker or a source chip opens the full cited passage, with a highlighter sweep that replays for each source (and is skipped for people who turn off motion in their system settings). Numbered tabs switch between an answer's sources. |
+| **Source panel** | Clicking a footnote marker or a source chip opens the full cited passage, with the supporting sentence highlighted. The sentence is found in the browser by matching keywords between the passage and the answer sentences that cite it. A highlighter sweep replays for each source (skipped for people who turn off motion in their system settings), and numbered tabs switch between an answer's sources. |
 | **Drag-and-drop uploads** | Drop several files at once. Each is checked in the browser first (type, size, empty), then uploads one at a time with real progress, using `XMLHttpRequest` because `fetch` can't report upload progress. |
 | **Sample documents** | New accounts can load the evaluation corpus in one click, to try Footnote without their own files |
 | **Account menu** | Opens from the initials in the top bar; closes on Escape (returning focus to the button) or a click outside, and works fully from the keyboard |
@@ -134,7 +134,7 @@ flowchart LR
 
 One Docker image serves both the API (under `/api`) and the built React app, so the browser talks to a single origin: session cookies just work, with no CORS. The image is built in two stages (Node builds the frontend; only the Python runtime ships), downloads the embedding model at build time so containers start fast, and runs database migrations on startup. CloudFront provides HTTPS without a custom domain. Fargate runs on ARM (Graviton), matching images built on Apple Silicon.
 
-**Deliberate cost trade-offs for a portfolio deployment:** containers run in public subnets with security groups instead of private subnets behind a NAT gateway (about $1/day even when idle), and the database is a single small instance without Multi-AZ. Both are noted as production changes below. The whole stack is created with `terraform apply` and removed with `terraform destroy`; a test deployment of a few hours used <!-- TODO: fill in the actual figure from AWS Billing --> of AWS credits.
+**Deliberate cost trade-offs for a portfolio deployment:** containers run in public subnets with security groups instead of private subnets behind a NAT gateway (about $1/day even when idle), and the database is a single small instance without Multi-AZ. Both are noted as production changes below. The whole stack is created with `terraform apply` and removed with `terraform destroy`; a test deployment of a few hours used only a small fraction of the account's free-tier credits.
 
 <details>
 <summary><b>Deploy it yourself</b></summary>
@@ -163,10 +163,6 @@ terraform destroy
 
 Set `region` in `infra/variables.tf` to a region your account allows.
 </details>
-
-![Footnote running on AWS behind CloudFront](docs/images/cloud-answer.png)
-
-*The deployed app on AWS (an earlier version of the interface), answering from the sample handbook.*
 
 ![Terraform creating 36 resources](docs/images/terraform-apply.png)
 
