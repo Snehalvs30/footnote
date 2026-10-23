@@ -1,40 +1,36 @@
 /*
-  Footnote's look: a quiet reading page. Answers are set like a book, in a serif,
-  with real superscript footnote markers. The one bold moment is the highlighter:
-  clicking a marker swipes yellow across the source it came from.
+  Footnote's look: a quiet reading room. Answers are set like a book, in a serif,
+  with real superscript footnote markers, on sage paper with deep green ink.
+  The one bold moment is the highlighter: clicking a marker swipes a lime
+  highlight across the source it came from. Light mode only, by design.
 */
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Public+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap');
 
 :root {
-  --paper: #eef1f4;
-  --sheet: #f8f9fb;
-  --ink: #1b2433;
-  --ink-soft: #5b6676;
-  --rule: #c9d0da;
-  --highlighter: #f2d74e;
+  /* "Library green" palette */
+  --paper: #ecf1ec;
+  --sheet: #f7faf6;
+  --ink: #1e3529;
+  --ink-soft: #55695c;
+  --rule: #c8d4ca;
+  --accent: #2e6b4a;
+  --on-accent: #ffffff;
+  --highlighter: #d6e98a;
   --danger: #a3342b;
 
+  /* Three typefaces, each with one job:
+     display  the wordmark and headings (DM Serif Display, made for large sizes)
+     sans     the interface: buttons, labels, sidebar (DM Sans, its sibling)
+     serif    reading: answers and source text (Source Serif) */
+  --display: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  --sans: 'DM Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
   --serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-  --sans: 'Public Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   color-scheme: light;
   font-family: var(--sans);
   color: var(--ink);
   background: var(--paper);
   -webkit-font-smoothing: antialiased;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #151a22;
-    --sheet: #1c222c;
-    --ink: #e6eaf0;
-    --ink-soft: #9aa4b2;
-    --rule: #333c4a;
-    --highlighter: #7a6a1e;
-    --danger: #e0786e;
-    color-scheme: dark;
-  }
 }
 
 * {
@@ -52,7 +48,7 @@ input {
 }
 
 :focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -68,13 +64,18 @@ input {
 /* ---- Layout: library on the left, the reading page on the right ---- */
 
 .app {
-  display: grid;
-  grid-template-columns: 17rem 1fr;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 17rem 1fr;
+}
+
 .banner {
-  grid-column: 1 / -1;
   margin: 0;
   padding: 0.75rem 1.5rem;
   background: var(--danger);
@@ -90,14 +91,16 @@ input {
 
 .library__title {
   margin: 0 0 1rem;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-family: var(--display);
+  font-size: 1.2rem;
+  font-weight: 400;
 }
 
 .upload {
   display: block;
   padding: 0.6rem 0.9rem;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--accent);
+  color: var(--accent);
   border-radius: 6px;
   text-align: center;
   font-weight: 500;
@@ -105,12 +108,12 @@ input {
 }
 
 .upload:hover {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .upload:focus-within {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -193,7 +196,6 @@ input {
 .reading {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
   background: var(--sheet);
 }
 
@@ -211,20 +213,21 @@ input {
 
 .welcome__title {
   margin: 0;
-  font-family: var(--serif);
-  font-size: 3.25rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-family: var(--display);
+  font-size: 3.5rem;
+  font-weight: 400; /* DM Serif Display has a single weight */
+  line-height: 1.05;
 }
 
 /* The product's name, footnoted: the identity in one typographic gesture. */
 .welcome__title::after {
   content: '1';
-  font-size: 0.4em;
+  font-family: var(--sans);
+  font-size: 0.32em;
   vertical-align: super;
   margin-left: 0.1em;
   font-weight: 400;
-  color: var(--ink-soft);
+  color: var(--accent);
 }
 
 .welcome__lead {
@@ -244,8 +247,10 @@ input {
 
 .turn__question {
   margin: 0 0 1rem;
-  font-size: 1rem;
-  font-weight: 600;
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1.3;
 }
 
 .answer-text {
@@ -276,7 +281,7 @@ input {
   font-family: var(--sans);
   font-size: 0.75em;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
@@ -372,7 +377,7 @@ input {
 }
 
 .ask__input:focus-visible {
-  border-color: var(--ink);
+  border-color: var(--accent);
   outline: none;
 }
 
@@ -380,8 +385,8 @@ input {
   padding: 0.75rem 1.25rem;
   border: none;
   border-radius: 6px;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 600;
   cursor: pointer;
 }
@@ -395,7 +400,7 @@ input {
 /* ---- Small screens: library above the page ---- */
 
 @media (max-width: 760px) {
-  .app {
+  .workspace {
     grid-template-columns: 1fr;
   }
 
@@ -413,23 +418,134 @@ input {
   }
 }
 
-/* ---- Account ---- */
+/* ---- Top bar and account menu ---- */
 
-.account {
+.topbar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  align-items: baseline;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
+  padding: 0.6rem 1.25rem;
+  background: var(--paper);
   border-bottom: 1px solid var(--rule);
-  font-size: 0.85rem;
 }
 
-.account__email {
-  min-width: 0;
-  overflow-wrap: anywhere;
+.topbar__wordmark {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.topbar__wordmark::after {
+  content: '1';
+  font-family: var(--sans);
+  font-size: 0.4em;
+  vertical-align: super;
+  margin-left: 0.1em;
+  color: var(--accent);
+}
+
+.account-menu {
+  position: relative;
+}
+
+.account-button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 3px 10px 3px 3px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--sheet);
+  cursor: pointer;
+}
+
+.account-button:hover,
+.account-button[aria-expanded='true'] {
+  background: var(--paper);
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* A small chevron drawn with borders; it flips when the panel is open. */
+.account-button__chevron {
+  width: 6px;
+  height: 6px;
+  margin: 0 2px 3px;
+  border-right: 1.5px solid var(--accent);
+  border-bottom: 1.5px solid var(--accent);
+  transform: rotate(45deg);
+  transition: transform 150ms ease-out;
+}
+
+.account-button[aria-expanded='true'] .account-button__chevron {
+  margin-bottom: -3px;
+  transform: rotate(225deg);
+}
+
+.account-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 10;
+  width: 15rem;
+  padding: 6px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgb(30 53 41 / 12%);
+}
+
+.account-panel__label {
+  margin: 0;
+  padding: 8px 10px 2px;
+  font-size: 0.75rem;
   color: var(--ink-soft);
+}
+
+.account-panel__email {
+  margin: 0 0 4px;
+  padding: 0 10px 10px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.875rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-panel__item {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  text-align: left;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.account-panel__item:hover,
+.account-panel__item:focus-visible {
+  background: var(--paper);
+  outline: none;
+}
+
+.link-button {
+  white-space: nowrap;
 }
 
 .link-button {
@@ -437,7 +553,7 @@ input {
   border: none;
   background: none;
   font-size: inherit;
-  color: var(--ink);
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
@@ -480,7 +596,7 @@ input {
 }
 
 .auth__field input:focus-visible {
-  border-color: var(--ink);
+  border-color: var(--accent);
   outline: none;
 }
 

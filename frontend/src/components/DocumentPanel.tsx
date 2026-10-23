@@ -6,11 +6,9 @@ import type { DocumentInfo } from '../types'
 interface Props {
   documents: DocumentInfo[]
   onChanged: () => void
-  email: string
-  onSignOut: () => void
 }
 
-export function DocumentPanel({ documents, onChanged, email, onSignOut }: Props) {
+export function DocumentPanel({ documents, onChanged }: Props) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -44,13 +42,6 @@ export function DocumentPanel({ documents, onChanged, email, onSignOut }: Props)
 
   return (
     <aside className="library">
-      <div className="account">
-        <span className="account__email">{email}</span>
-        <button type="button" className="link-button" onClick={onSignOut}>
-          Sign out
-        </button>
-      </div>
-
       <h2 className="library__title">Your documents</h2>
 
       <label className={`upload ${uploading ? 'upload--busy' : ''}`}>

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { streamAnswer } from '../api'
+import { stripMarkdown } from '../text'
 import type { Source } from '../types'
 import { AnswerText } from './AnswerText'
 
@@ -109,7 +110,7 @@ export function ChatPanel({ canAsk }: Props) {
                       <span className="footnote__where">
                         {source.filename}, page {source.page_number}
                       </span>
-                      <span className="footnote__excerpt">{source.excerpt}…</span>
+                      <span className="footnote__excerpt">{stripMarkdown(source.excerpt)}…</span>
                     </li>
                   )
                 })}

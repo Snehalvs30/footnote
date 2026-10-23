@@ -3,6 +3,7 @@ import { getCurrentUser, listDocuments, signOut, UnauthorizedError } from './api
 import { AuthScreen } from './components/AuthScreen'
 import { ChatPanel } from './components/ChatPanel'
 import { DocumentPanel } from './components/DocumentPanel'
+import { TopBar } from './components/TopBar'
 import type { DocumentInfo, User } from './types'
 
 // undefined = still checking the session; null = signed out.
@@ -77,9 +78,12 @@ export default function App() {
           {loadError}
         </p>
       )}
-      <DocumentPanel documents={documents} onChanged={refresh} email={user.email} onSignOut={handleSignOut} />
-      {/* key: a different user gets a fresh, empty conversation */}
-      <ChatPanel key={user.id} canAsk={canAsk} />
+      <TopBar email={user.email} onSignOut={handleSignOut} />
+      <div className="workspace">
+        <DocumentPanel documents={documents} onChanged={refresh} />
+        {/* key: a different user gets a fresh, empty conversation */}
+        <ChatPanel key={user.id} canAsk={canAsk} />
+      </div>
     </div>
   )
 }
