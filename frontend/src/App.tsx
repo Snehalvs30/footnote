@@ -10,7 +10,10 @@ import { useUploads } from './useUploads'
 // undefined = still checking the session; null = signed out.
 type SessionState = User | null | undefined
 
-const API_DOWN = "Can't reach the Footnote API. Start it with: uv run fastapi dev app/main.py"
+// Developers get the fix; users get a plain message. Vite sets DEV to true only for `npm run dev`.
+const API_DOWN = import.meta.env.DEV
+  ? "Can't reach the Footnote API. Start it with: uv run fastapi dev app/main.py"
+  : "Footnote is unavailable right now. Please try again in a moment."
 
 export default function App() {
   const [user, setUser] = useState<SessionState>(undefined)
