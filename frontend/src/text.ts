@@ -47,7 +47,10 @@ function keywords(text: string): string[] {
  */
 export function citedSentences(answer: string, sourceNumber: number, sentences: string[]): Set<number> {
   const claims = splitSentences(answer).filter((sentence) => sentence.includes(`[${sourceNumber}]`))
-  const target = new Set(keywords(claims.length > 0 ? claims.join(' ') : answer))
+  // A source the answer never cites has no claims to match: highlight nothing, rather
+  // than matching the whole answer and marking loosely related sentences.
+  if (claims.length === 0) return new Set()
+  const target = new Set(keywords(claims.join(' ')))
 
   const scores = sentences.map((sentence) => new Set(keywords(sentence).filter((word) => target.has(word))).size)
   const best = Math.max(0, ...scores)
@@ -55,4 +58,9 @@ export function citedSentences(answer: string, sourceNumber: number, sentences: 
 
   const threshold = Math.max(2, best * 0.6)
   return new Set(scores.flatMap((score, index) => (score >= threshold ? [index] : [])))
+}
+
+/** Whether any sentence of the answer cites source number n, as "[n]". */
+export function citesSource(answer: string, sourceNumber: number): boolean {
+  return answer.includes(`[${sourceNumber}]`)
 }

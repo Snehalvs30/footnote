@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { citedSentences, splitSentences, stripMarkdown } from '../text'
+import { citedSentences, citesSource, splitSentences, stripMarkdown } from '../text'
 import type { Source } from '../types'
 
 interface Props {
@@ -71,7 +71,11 @@ export function SourcePanel({ sources, answer, selected, onSelect, onClose }: Pr
               ))}
             </p>
             {cited.size === 0 && (
-              <p className="source-panel__note">The whole passage was given to the model as this source.</p>
+              <p className="source-panel__note">
+                {citesSource(answer, source.number)
+                  ? 'The whole passage was given to the model as this source.'
+                  : "Retrieved as possible context; the answer doesn't cite this passage."}
+              </p>
             )}
           </article>
         </>
